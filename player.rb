@@ -22,14 +22,33 @@ module WarriorQueries
   end
 
   def rescuable_direction(warrior)
-    directions_for(warrior).find do |dir|
-      feel = warrior.feel(dir)
-      feel.captive?
-    end
+    immediate_direction_of(warrior, :captive)
   end
+
+  def rescuable_bearing(warrior)
+    distant_direction_of(warrior, :captive)
+  end
+
+  def stairway_bearing(warrior)
+    warrior.direction_of_stairs
+  end
+
+  private
 
   def directions_for(warrior)
     [warrior.direction_of_stairs, :forward, :left, :right, :backward].uniq
+  end
+
+  def immediate_direction_of(warrior, space_type)
+    directions_for(warrior).find do |dir|
+      warrior.feel(dir).send("#{space_type}?")
+    end
+  end
+
+  def distant_direction_of(warrior, space_type)
+    warrior.listen.select(&("#{space_type}?".to_sym)).
+      map {|space| warrior.direction_of(space) }.
+      first
   end
 end
 
@@ -71,13 +90,26 @@ class Player
   include WarriorQueries
   include WarriorCommands
 
-  def play_turn(warrior)
-    return if act(warrior, :bindable_direction, :bind!)
-    return if act(warrior, :attackable_direction, :attack!)
-    return if act(warrior, :restable?, :rest!)
-    return if act(warrior, :rescuable_direction, :rescue!)
+  ACTIONS = {
+    bindable_direction: :bind!,
+    attackable_direction: :attack!,
+    restable?: :rest!,
+    rescuable_direction: :rescue!
+  }
 
-    warrior.walk!(warrior.direction_of_stairs)
+  BEARINGS = [
+    :rescuable_bearing,
+    :stairway_bearing
+  ]
+
+  def play_turn(warrior)
+    ACTIONS.each do |(query, command)|
+      return if act(warrior, query, command)
+    end
+
+    BEARINGS.each do |query|
+      return if act(warrior, query, :walk!)
+    end
   end
 end
 
