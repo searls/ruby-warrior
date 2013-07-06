@@ -10,7 +10,7 @@ module WarriorQueries
   end
 
   def attackable_bearing(warrior)
-    bearing_of(warrior, :enemy)
+    non_stairway_bearing_of(warrior, :enemy)
   end
 
   # If there are multiple unbound enemies surrounding me
@@ -28,7 +28,14 @@ module WarriorQueries
   end
 
   def rescuable_bearing(warrior)
-    bearing_of(warrior, :captive)
+    non_stairway_bearing_of(warrior, :captive)
+  end
+
+  def point_of_interest_bearing(warrior)
+    warrior.listen.select { |space| space.captive? || space.enemy? }.
+      map { |space| warrior.direction_of(space) }.
+      uniq.
+      find { |dir| !warrior.feel(dir).stairs? }
   end
 
   def stairway_bearing(warrior)
@@ -49,6 +56,12 @@ module WarriorQueries
 
   def exists_but_only_at_a_distance?(warrior, space_type)
     !direction_of(warrior, space_type) && bearing_of(warrior, space_type)
+  end
+
+  def non_stairway_bearing_of(warrior, space_type)
+    if bearing = bearing_of(warrior, space_type)
+      return bearing unless warrior.feel(bearing).stairs?
+    end
   end
 
   def bearing_of(warrior, space_type)
@@ -106,6 +119,7 @@ class Player
   BEARINGS = [
     :rescuable_bearing,
     :attackable_bearing,
+    :point_of_interest_bearing,
     :stairway_bearing
   ]
 
