@@ -6,11 +6,11 @@ module WarriorQueries
   end
 
   def attackable_direction(warrior)
-    immediate_direction_of(warrior, :enemy)
+    direction_of(warrior, :enemy)
   end
 
   def attackable_bearing(warrior)
-    distant_direction_of(warrior, :enemy)
+    bearing_of(warrior, :enemy)
   end
 
   # If there are multiple unbound enemies surrounding me
@@ -24,11 +24,11 @@ module WarriorQueries
   end
 
   def rescuable_direction(warrior)
-    immediate_direction_of(warrior, :captive)
+    direction_of(warrior, :captive)
   end
 
   def rescuable_bearing(warrior)
-    distant_direction_of(warrior, :captive)
+    bearing_of(warrior, :captive)
   end
 
   def stairway_bearing(warrior)
@@ -41,17 +41,17 @@ module WarriorQueries
     [warrior.direction_of_stairs, :forward, :left, :right, :backward].uniq
   end
 
-  def immediate_direction_of(warrior, space_type)
+  def direction_of(warrior, space_type)
     directions_for(warrior).find do |dir|
       warrior.feel(dir).send("#{space_type}?")
     end
   end
 
   def exists_but_only_at_a_distance?(warrior, space_type)
-    !immediate_direction_of(warrior, space_type) && distant_direction_of(warrior, space_type)
+    !direction_of(warrior, space_type) && bearing_of(warrior, space_type)
   end
 
-  def distant_direction_of(warrior, space_type)
+  def bearing_of(warrior, space_type)
     warrior.listen.select(&("#{space_type}?".to_sym)).
       map {|space| warrior.direction_of(space) }.
       first
