@@ -6,9 +6,11 @@ module WarriorQueries
   end
 
   def attackable_direction(warrior)
-    directions_for(warrior).find do |dir|
-      warrior.feel(dir).enemy?
-    end
+    immediate_direction_of(warrior, :enemy)
+  end
+
+  def attackable_bearing(warrior)
+    distant_direction_of(warrior, :enemy)
   end
 
   # If there are multiple unbound enemies surrounding me
@@ -99,6 +101,7 @@ class Player
 
   BEARINGS = [
     :rescuable_bearing,
+    :attackable_bearing,
     :stairway_bearing
   ]
 
