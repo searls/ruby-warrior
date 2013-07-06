@@ -2,7 +2,7 @@ module WarriorQueries
   MAX_HP = 20
 
   def restable?(warrior)
-    warrior.health < MAX_HP && directions_for(warrior).none? {|dir| warrior.feel(dir).enemy? }
+    warrior.health < MAX_HP && exists_but_only_at_a_distance?(warrior, :enemy)
   end
 
   def attackable_direction(warrior)
@@ -45,6 +45,10 @@ module WarriorQueries
     directions_for(warrior).find do |dir|
       warrior.feel(dir).send("#{space_type}?")
     end
+  end
+
+  def exists_but_only_at_a_distance?(warrior, space_type)
+    !immediate_direction_of(warrior, space_type) && distant_direction_of(warrior, space_type)
   end
 
   def distant_direction_of(warrior, space_type)
