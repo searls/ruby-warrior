@@ -13,7 +13,7 @@ module WarriorQueries
 
   # If there are multiple unbound enemies surrounding me
   # Then I want to bind the ones in the direction I do not wish to travel
-  def bind_direction(warrior)
+  def bindable_direction(warrior)
     unbound_enemies = directions_for(warrior).select do |dir|
       feel = warrior.feel(dir)
       feel.enemy? && !feel.captive?
@@ -21,7 +21,7 @@ module WarriorQueries
     return unbound_enemies.last if unbound_enemies.size > 1
   end
 
-  def captive_direction(warrior)
+  def rescuable_direction(warrior)
     directions_for(warrior).find do |dir|
       feel = warrior.feel(dir)
       feel.captive?
@@ -72,10 +72,10 @@ class Player
   include WarriorCommands
 
   def play_turn(warrior)
-    return if act(warrior, :bind_direction, :bind!)
+    return if act(warrior, :bindable_direction, :bind!)
     return if act(warrior, :attackable_direction, :attack!)
     return if act(warrior, :restable?, :rest!)
-    return if act(warrior, :captive_direction, :rescue!)
+    return if act(warrior, :rescuable_direction, :rescue!)
 
     warrior.walk!(warrior.direction_of_stairs)
   end
