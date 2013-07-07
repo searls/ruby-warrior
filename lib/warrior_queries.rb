@@ -37,6 +37,22 @@ module WarriorQueries
     direction_of(:ticking)
   end
 
+  def adjacent_enemy_cluster
+    if clustered_enemy = adjacent(:enemy).find { |e| nearby?(e, :enemy) }
+      warrior.direction_of(clustered_enemy)
+    end
+  end
+
+  def nearby?(search_space, space_type, within = 3)
+    spaces(space_type).reject { |s| s == search_space }.select do |space|
+      distance_between(search_space.location, space.location) <= within
+    end.any?
+  end
+
+  def distance_between(a, b)
+    Math.hypot(b[0]-a[0],b[1]-b[0]) #totally had to google for this. shame on me.
+  end
+
   def captive_direction
     direction_of(:captive)
   end
@@ -60,10 +76,14 @@ module WarriorQueries
 
   private
 
-  def adjacent_to_any?(space_type)
-    DIRECTIONS.any? do |dir|
-      warrior.feel(dir).send("#{space_type}?")
+  def adjacent(space_type)
+    DIRECTIONS.map {|dir| warrior.feel(dir) }.select do |space|
+      space.send("#{space_type}?")
     end
+  end
+
+  def adjacent_to_any?(space_type)
+    adjacent(space_type).any?
   end
 
   def adjacent_to_stairs?
@@ -85,8 +105,11 @@ module WarriorQueries
   end
 
   def bearings_of(space_type)
-    warrior.listen.select(&("#{space_type}?".to_sym)).
-      map {|space| warrior.direction_of(space) }
+    spaces(space_type).map {|space| warrior.direction_of(space) }
+  end
+
+  def spaces(space_type)
+    warrior.listen.select(&("#{space_type}?".to_sym))
   end
 
   def bearing_of(space_type)

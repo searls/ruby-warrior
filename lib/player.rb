@@ -11,6 +11,7 @@ class Player
   ACTIONS = {
     chase_ticking_captive: :walk!,
     ticking_direction: :rescue!,
+    adjacent_enemy_cluster: :detonate!,
     additional_enemy: :bind!,
     enemy_direction: :attack!,
     restable?: :rest!,
