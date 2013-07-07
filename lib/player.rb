@@ -9,14 +9,15 @@ class Player
   attr_reader :warrior
 
   ACTIONS = {
-    bindable_direction: :bind!,
-    attackable_direction: :attack!,
+    ticking_direction: :rescue!,
+    additional_enemy: :bind!,
+    enemy_direction: :attack!,
     restable?: :rest!,
-    rescuable_direction: :rescue!
+    captive_direction: :rescue!
   }
 
   BEARINGS = [
-    :rescuable_bearing,
+    :captive_bearing,
     :attackable_bearing,
     :uncleared_map_bearing,
     :cleared_map_bearing

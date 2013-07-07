@@ -6,7 +6,7 @@ module WarriorQueries
     warrior.health < MAX_HP && enemy_possibly_exists?
   end
 
-  def attackable_direction
+  def enemy_direction
     direction_of(:enemy)
   end
 
@@ -16,7 +16,7 @@ module WarriorQueries
 
   # If there are multiple unbound enemies surrounding me
   # Then I want to bind the ones in the direction I do not wish to travel
-  def bindable_direction
+  def additional_enemy
     unbound_enemies = directions.select do |dir|
       feel = warrior.feel(dir)
       feel.enemy? && !feel.captive?
@@ -24,11 +24,15 @@ module WarriorQueries
     return unbound_enemies.last if unbound_enemies.size > 1
   end
 
-  def rescuable_direction
+  def ticking_direction
+    direction_of(:ticking)
+  end
+
+  def captive_direction
     direction_of(:captive)
   end
 
-  def rescuable_bearing
+  def captive_bearing
     non_stairway_bearing_of(:captive)
   end
 
