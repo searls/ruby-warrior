@@ -1,8 +1,9 @@
 module WarriorQueries
   MAX_HP = 20
+  DIRECTIONS = [:forward, :left, :right, :backward]
 
   def restable?(warrior)
-    warrior.health < MAX_HP && exists_but_only_at_a_distance?(warrior, :enemy)
+    warrior.health < MAX_HP && enemy_possibly_exists?(warrior)
   end
 
   def attackable_direction(warrior)
@@ -31,24 +32,29 @@ module WarriorQueries
     non_stairway_bearing_of(warrior, :captive)
   end
 
-  def stairway_bearing(warrior)
+  def uncleared_map_bearing(warrior)
+    if anything_interesting?(warrior) && warrior.feel(warrior.direction_of_stairs).stairs?
+      DIRECTIONS.shuffle.find do |dir|
+        feel = warrior.feel(dir)
+        feel.empty? && !feel.stairs?
+      end
+    end
+  end
+
+  def cleared_map_bearing(warrior)
     warrior.direction_of_stairs
   end
 
   private
 
   def directions_for(warrior)
-    [warrior.direction_of_stairs, :forward, :left, :right, :backward].uniq
+    ([warrior.direction_of_stairs] + DIRECTIONS).uniq
   end
 
   def direction_of(warrior, space_type)
     directions_for(warrior).find do |dir|
       warrior.feel(dir).send("#{space_type}?")
     end
-  end
-
-  def exists_but_only_at_a_distance?(warrior, space_type)
-    !direction_of(warrior, space_type) && bearing_of(warrior, space_type)
   end
 
   def non_stairway_bearing_of(warrior, space_type)
@@ -62,6 +68,24 @@ module WarriorQueries
 
   def bearing_of(warrior, space_type)
     bearings_of(warrior, space_type).first
+  end
+
+  def anything_interesting?(warrior)
+    warrior.listen.any? do |space|
+      space.captive? || space.enemy?
+    end
+  end
+
+  def enemy_possibly_exists?(warrior)
+    any_non_captive_units?(warrior) || exists_but_only_at_a_distance?(warrior, :enemy)
+  end
+
+  def any_non_captive_units?(warrior)
+    warrior.listen.any? {|space| space.unit && !space.unit.is_a?(RubyWarrior::Units::Captive) }
+  end
+
+  def exists_but_only_at_a_distance?(warrior, space_type)
+    !direction_of(warrior, space_type) && bearing_of(warrior, space_type)
   end
 end
 
@@ -113,7 +137,8 @@ class Player
   BEARINGS = [
     :rescuable_bearing,
     :attackable_bearing,
-    :stairway_bearing
+    :uncleared_map_bearing,
+    :cleared_map_bearing
   ]
 
   def play_turn(warrior)
