@@ -1,40 +1,22 @@
-require_relative 'act_maybe'
-require_relative 'warrior_queries'
-require_relative 'warrior_commands'
+require 'forwardable'
 
+require_relative 'warrior/brain'
+require_relative 'warrior/body'
+require_relative 'deciders/decides_action'
+require_relative 'deciders/decides_heading'
 
 class Player
-  include WarriorQueries
-  include WarriorCommands
-  attr_reader :warrior
-
-  ACTIONS = {
-    chase_ticking_captive: :walk!,
-    ticking_direction: :rescue!,
-    adjacent_enemy_cluster: :detonate!,
-    additional_enemy: :bind!,
-    enemy_direction: :attack!,
-    restable?: :rest!,
-    captive_direction: :rescue!
-  }
-
-  BEARINGS = [
-    :captive_bearing,
-    :attackable_bearing,
-    :uncleared_map_bearing,
-    :cleared_map_bearing
-  ]
+  def initialize()
+    @deciders = [Deciders::DecidesAction, Deciders::DecidesHeading].map(&:new)
+  end
 
   def play_turn(warrior)
-    @warrior = warrior
+    brain = Warrior::Brain.new(warrior)
+    body = Warrior::Body.new(warrior)
 
-    ACTIONS.each do |(query, command)|
-      return if act(warrior, query, command)
-    end
+    @deciders.each { |decider| decider.decide(brain, body) }
 
-    BEARINGS.each do |query|
-      return if act(warrior, query, :walk!)
-    end
+    body.take_action
   end
 end
 
