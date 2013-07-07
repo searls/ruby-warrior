@@ -118,7 +118,7 @@ module WarriorQueries
   # to consider the reverse of X *last*, because i don't want
   # to simply go backwards
   def directions_in_lieu_of(dir)
-    DIRECTIONS - [dir, reverse(dir)] + [reverse(dir)]
+    DIRECTIONS - [dir, reverse(dir)] #+ [reverse(dir)]
   end
 
   def reverse(direction)
