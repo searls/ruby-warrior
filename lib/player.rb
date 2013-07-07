@@ -9,6 +9,7 @@ class Player
   attr_reader :warrior
 
   ACTIONS = {
+    chase_ticking_captive: :walk!,
     ticking_direction: :rescue!,
     additional_enemy: :bind!,
     enemy_direction: :attack!,

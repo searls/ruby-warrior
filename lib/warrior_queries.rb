@@ -2,6 +2,15 @@ module WarriorQueries
   MAX_HP = 20
   DIRECTIONS = [:forward, :left, :right, :backward]
 
+  def chase_ticking_captive
+    ticking_captives = warrior.listen.select(&:ticking?)
+    if ticking_captives.any? && !adjacent_to_any?(:ticking)
+      dir = warrior.direction_of(ticking_captives.first)
+      return dir if warrior.feel(dir).empty?
+      directions_in_lieu_of(dir).find {|dir| warrior.feel(dir).empty? }
+    end
+  end
+
   def restable?
     warrior.health < MAX_HP && enemy_possibly_exists?
   end
@@ -51,6 +60,12 @@ module WarriorQueries
 
   private
 
+  def adjacent_to_any?(space_type)
+    DIRECTIONS.any? do |dir|
+      warrior.feel(dir).send("#{space_type}?")
+    end
+  end
+
   def adjacent_to_stairs?
     warrior.feel(warrior.direction_of_stairs).stairs?
   end
@@ -94,5 +109,24 @@ module WarriorQueries
 
   def exists_but_only_at_a_distance?(space_type)
     !direction_of(space_type) && bearing_of(space_type)
+  end
+
+  # This method is poorly named
+  # Basically, what I seem to often want is to go
+  # in direction X, but X is blocked.
+  # Therefore I want all directions (less X) and I want
+  # to consider the reverse of X *last*, because i don't want
+  # to simply go backwards
+  def directions_in_lieu_of(dir)
+    DIRECTIONS - [dir, reverse(dir)] + [reverse(dir)]
+  end
+
+  def reverse(direction)
+    case direction
+      when :forward then :backward
+      when :right then :left
+      when :bottom then :forward
+      when :left then :right
+    end
   end
 end
